@@ -246,8 +246,8 @@
             <!-- Botão para Upload e Gravação na Planilha -->
             <div class="upload-container">
                 <input type="file" id="fileInputMapa" accept="image/*" onchange="verificarSenhaEEnviarImagem(event)">
-                <button class="btn-upload-file" id="btnUpload" onclick="acionarUploadComSenha()">
-                    📁 Enviar Imagem e Salvar na Planilha
+                <button class="btn-upload-file" id="btnUpload" onclick="_acionarUploadComSenha()">
+                    📁 Somente Visualizar alguma Imagem
                 </button>
                 <span id="uploadStatus" style="font-size: 0.85em; color: #555; font-weight: bold;"></span>
             </div>
@@ -271,6 +271,7 @@
                     const vaga = item['Vaga'] || 'Não atribuída';
                     const gabinete = item['Gabinete / Desembargador'] || '';
                     const linkMapa = item['Mapa'] || item['LinkMapa'] || '';
+                    const linkMag = item['Foto'] || item['LinkMag'] || '';
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
@@ -281,6 +282,7 @@
                         <td>
                             <button class="btn-acao" onclick='solicitarSenhaESalvar(${item.rowNumber}, ${index}, this)'>Guardar</button>
                             <button class="btn-mapa" onclick='mostrarMapa(${index}, "${vaga}", "${gabinete}", ${JSON.stringify(linkMapa)})'>Ver Mapa</button>
+                       <button class="btn-mapa" onclick='mostrarMagistrado("${vaga}", "${gabinete}", ${JSON.stringify(linkMag)})'>Ver_Magistrado</button> 
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -361,6 +363,38 @@
                 `;
             }
             
+            document.getElementById('mapModal').style.display = 'flex';
+        } 
+        
+        // mostrar magistrado
+
+        function mostrarMagistrado(vaga, gabinete, linkMag) {
+            document.getElementById('modalTitle').innerText = 'Vaga: ' + vaga;
+            document.getElementById('modalSubTitle').innerText = gabinete;
+            
+            const container = document.getElementById('mapPreviewContainer');
+            container.innerHTML = ''; // Limpa o conteúdo anterior
+
+            if (linkMag && linkMag.trim() !== '') {
+                // Se houver um link de imagem configurado na coluna da planilha, cria a tag img
+                const img = document.createElement('img');
+                img.src = linkMag;
+                img.alt = 'Mostra Magistrado ' + vaga;
+                img.onerror = function() {
+                    container.innerHTML = '<p style="color: #d9534f; padding: 20px;">Erro ao carregar a imagem do mapa. Verifique o link fornecido na planilha.</p>';
+                };
+                container.appendChild(img);
+            } else {
+                // Se não houver link na coluna, exibe uma mensagem indicando que a coluna está vazia
+                container.innerHTML = `
+                    <div style="padding: 20px; text-align: center;">
+                        <p style="font-size: 1.1em; font-weight: bold; color: #3B5998;">Vaga ${vaga}</p>
+                        <p style="color: #777; font-size: 0.9em;">Nenhum link de imagem de mapa foi adicionado na coluna correspondente desta linha no Excel/Planilha.</p>
+                    </div>
+                `;
+            }
+            
+            // Exibe o modal
             document.getElementById('mapModal').style.display = 'flex';
         }
 
