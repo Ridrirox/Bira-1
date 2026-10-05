@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Garagem - TJPR</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 15px; 
+            background-color: #f4f6f9; 
+        }
+        h2 { 
+            color: #2F4F4F; 
+            text-align: center;
+        }
+        
+        /* Estilos para a Barra de Pesquisa */
+        .search-container { 
+            margin-bottom: 20px; 
+            text-align: center;
+        }
+        .search-input { 
+            width: 70%; 
+            max-width: 500px;
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            display: inline-block; 
+            margin-right: 10px;
+            box-sizing: border-box;
+        }
+        .btn-pesquisar {
+            background-color: #2F4F4F; 
+            color: white; 
+            border: none; 
+            padding: 10px 15px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold;
+        }
+        .btn-pesquisar:hover { background-color: #1F385C; }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            background: white; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+        }
+        th, td { 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            text-align: left; 
+        }
+        th { 
+            background-color: #3B5998; 
+            color: white; 
+        }
+        input.table-input { 
+            width: 100%; 
+            box-sizing: border-box; 
+            padding: 8px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+        }
+        .btn-acao { 
+            background-color: #2F4F4F; 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .btn-mapa {
+            background-color: #3B5998;
+            color: white;
+            border: none;
+            padding: 8px 12px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .btn-acao:hover { background-color: #1F385C; }
+        .btn-mapa:hover { background-color: #2a437e; }
+        
+        #loading {
+            text-align: center;
+            font-size: 1.2em;
+            margin-top: 20px;
+            color: #555;
+        }
+
+        /* Estilos do Modal do Mapa */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.5); 
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 650px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
+            text-align: center;
+        }
+        .close-btn {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-btn:hover { color: #000; }
+        
+        .map-preview {
+            width: 100%;
+            min-height: 250px;
+            max-height: 380px;
+            background-color: #e9ecef;
+            border: 2px dashed #ccc;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        .map-preview img {
+            max-width: 100%;
+            max-height: 360px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        /* Estilo para a área de upload de imagem no modal */
+        .upload-container {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+        .btn-upload-file {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-block;
+            width: 100%;
+            max-width: 300px;
+        }
+        .btn-upload-file:hover {
+            background-color: #218838;
+        }
+        #fileInputMapa {
+            display: none;
+        }
+
+        /* Responsividade para Telemóveis */
+        @media screen and (max-width: 768px) {
+            .search-input { width: 100%; margin-bottom: 10px; margin-right: 0; }
+            .btn-pesquisar { width: 100%; }
+
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            tr {
+                margin-bottom: 15px;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                background-color: #fff;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            td {
+                border: none;
+                border-bottom: 1px solid #eee;
+                position: relative;
+                padding-left: 45%;
+                text-align: right;
+            }
+            td:before {
+                position: absolute;
+                top: 12px;
+                left: 12px;
+                width: 40%;
+                padding-right: 10px;
+                white-space: nowrap;
+                font-weight: bold;
+                text-align: left;
+                color: #3B5998;
+            }
+            td:nth-of-type(1):before { content: "Gabinete:"; }
+            td:nth-of-type(2):before { content: "Vaga:"; }
+            td:nth-of-type(3):before { content: "Veículo:"; }
+            td:nth-of-type(4):before { content: "Placa:"; }
+            td:nth-of-type(5):before { content: "Ações:"; }
+
+            td:nth-of-type(1) {
+                background-color: #f0f2f5;
+                text-align: center;
+                padding-left: 12px;
+                font-size: 1.1em;
+                border-radius: 8px 8px 0 0;
+            }
+            td:nth-of-type(1):before { content: ""; display: none; }
+            
+            input.table-input { margin-top: 5px; text-align: right; }
+            .btn-acao, .btn-mapa { width: 100%; margin-bottom: 8px; }
+            .btn-upload-file { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Controle de Vagas da Garagem - TJPR</h2>
+
+    <!-- Novo campo e botão de pesquisa -->
+    <div class="search-container">
+        <input type="text" id="campoPesquisa" class="search-input" placeholder="Pesquisar por Desembargador, Vaga, Veículo ou Placa..." onkeyup="filtrarTabela()">
+        <button class="btn-pesquisar" onclick="filtrarTabela()">Pesquisar</button>
+    </div>
+
+    <div id="loading">A carregar dados da grelha...</div>
+    
+    <div class="table-container">
+        <table id="garageTable" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Gabinete / Desembargador</th>
+                    <th>Vaga</th>
+                    <th>Veículo</th>
+                    <th>Placa</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Modal para exibir e carregar o Mapa / Imagem da Vaga -->
+    <div id="mapModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="fecharMapa()">&times;</span>
+            <h3 id="modalTitle">Localização da Vaga</h3>
+            <p id="modalSubTitle" style="color: #666; font-size: 0.9em;"></p>
+            
+            <div class="map-preview" id="mapPreviewContainer">
+                <!-- A imagem será inserida dinamicamente aqui -->
+            </div>
+
+            <!-- Botão para Upload e Gravação na Planilha -->
+            <div class="upload-container">
+                <input type="file" id="fileInputMapa" accept="image/*" onchange="verificarSenhaEEnviarImagem(event)">
+                <button class="btn-upload-file" id="btnUpload" onclick="_acionarUploadComSenha()">
+                    📁 Somente Visualizar alguma Imagem
+                </button>
+                <span id="uploadStatus" style="font-size: 0.85em; color: #555; font-weight: bold;"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyOc0T5QWkSABJ_jjzzZW_RiG9decKTeVI_icVrz758LEWUjNpKbdvpxIDMNY__trTr_A/exec';
+        const SENHA_MESTRE = '1313'; // Defina aqui a senha desejada para autorizar as alterações
+        let dadosGlobais = []; 
+
+        async function carregarDados() {
+            try {
+                const response = await fetch(WEB_APP_URL);
+                dadosGlobais = await response.json();
+                
+                const tbody = document.getElementById('tableBody');
+                tbody.innerHTML = '';
+                
+                dadosGlobais.forEach((item, index) => {
+                    const vaga = item['Vaga'] || 'Não atribuída';
+                    const gabinete = item['Gabinete / Desembargador'] || '';
+                    const linkMapa = item['Mapa'] || item['LinkMapa'] || '';
+                    const linkMag = item['Foto'] || item['LinkMag'] || '';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${gabinete}</td>
+                        <td><input type="text" class="table-input" id="vaga_${index}" value="${item['Vaga'] || ''}"></td>
+                        <td><input type="text" class="table-input" id="veiculo_${index}" value="${item['Veículo'] || ''}"></td>
+                        <td><input type="text" class="table-input" id="placa_${index}" value="${item['Placa'] || ''}"></td>
+                        <td>
+                            <button class="btn-acao" onclick='solicitarSenhaESalvar(${item.rowNumber}, ${index}, this)'>Guardar</button>
+                            <button class="btn-mapa" onclick='mostrarMapa(${index}, "${vaga}", "${gabinete}", ${JSON.stringify(linkMapa)})'>Ver Mapa</button>
+                            <button class="btn-mapa" onclick='mostrarMagistrado("${vaga}", "${gabinete}", ${JSON.stringify(linkMag)})'>Ver Magistrado</button> 
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('garageTable').style.display = ''; 
+            } catch (error) {
+                document.getElementById('loading').innerText = 'Erro ao carregar dados: ' + error;
+            }
+        }
+
+        // Função para filtrar a tabela
+        function filtrarTabela() {
+            const input = document.getElementById("campoPesquisa");
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById("garageTable");
+            const tr = table.getElementsByTagName("tr");
+
+            // Percorre todas as linhas da tabela (ignorando o cabeçalho)
+            for (let i = 1; i < tr.length; i++) {
+                const tdGabinete = tr[i].getElementsByTagName("td")[0];
+                const inputVaga = tr[i].getElementsByTagName("td")[1].querySelector("input");
+                const inputVeiculo = tr[i].getElementsByTagName("td")[2].querySelector("input");
+                const inputPlaca = tr[i].getElementsByTagName("td")[3].querySelector("input");
+
+                if (tdGabinete) {
+                    const textoGabinete = tdGabinete.textContent || tdGabinete.innerText;
+                    const textoVaga = inputVaga ? inputVaga.value : "";
+                    const textoVeiculo = inputVeiculo ? inputVeiculo.value : "";
+                    const textoPlaca = inputPlaca ? inputPlaca.value : "";
+                    
+                    const textoLinha = textoGabinete + " " + textoVaga + " " + textoVeiculo + " " + textoPlaca;
+
+                    if (textoLinha.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
+        function solicitarSenhaESalvar(rowNumber, index, buttonElement) {
+            const senhaDigitada = prompt('Digite a senha para guardar as alterações:');
+            if (senhaDigitada === null) return; // Cancelado
+
+            if (senhaDigitada !== SENHA_MESTRE) {
+                alert('Senha incorreta! Alteração não autorizada.');
+                return;
+            }
+
+            salvarLinha(rowNumber, index, buttonElement);
+        }
+
+        async function salvarLinha(rowNumber, index, buttonElement) {
+            const payload = {
+                rowNumber: rowNumber,
+                Vaga: document.getElementById(`vaga_${index}`).value,
+                Veículo: document.getElementById(`veiculo_${index}`).value,
+                Placa: document.getElementById(`placa_${index}`).value
+            };
+
+            try {
+                buttonElement.innerText = 'A guardar...';
+                buttonElement.disabled = true;
+                
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                alert(result.message);
+                buttonElement.innerText = 'Guardar';
+                buttonElement.disabled = false;
+            } catch (error) {
+                alert('Erro ao guardar: ' + error);
+                buttonElement.innerText = 'Guardar';
+                buttonElement.disabled = false;
+            }
+        }
+
+        let currentItemIndex = null;
+
+        function mostrarMapa(index, vaga, gabinete, linkMapa) {
+            currentItemIndex = index;
+            document.getElementById('modalTitle').innerText = 'Vaga: ' + vaga;
+            document.getElementById('modalSubTitle').innerText = gabinete;
+            document.getElementById('uploadStatus').innerText = '';
+            
+            const container = document.getElementById('mapPreviewContainer');
+            container.innerHTML = ''; 
+
+            if (linkMapa && linkMapa.trim() !== '') {
+                const img = document.createElement('img');
+                img.src = linkMapa;
+                img.alt = 'Mapa da Vaga ' + vaga;
+                img.onerror = function() {
+                    container.innerHTML = '<p style="color: #d9534f; padding: 20px;">Erro ao carregar a imagem do mapa. Verifique o link fornecido.</p>';
+                };
+                container.appendChild(img);
+            } else {
+                container.innerHTML = `
+                    <div style="padding: 20px; text-align: center;">
+                        <p style="font-size: 1.1em; font-weight: bold; color: #3B5998;">Vaga ${vaga}</p>
+                        <p style="color: #777; font-size: 0.9em;">Nenhuma imagem de mapa guardada na planilha. Utilize o botão abaixo para enviar.</p>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('mapModal').style.display = 'flex';
+        } 
+        
+        function mostrarMagistrado(vaga, gabinete, linkMag) {
+            document.getElementById('modalTitle').innerText = 'Vaga: ' + vaga;
+            document.getElementById('modalSubTitle').innerText = gabinete;
+            
+            const container = document.getElementById('mapPreviewContainer');
+            container.innerHTML = ''; 
+
+            if (linkMag && linkMag.trim() !== '') {
+                const img = document.createElement('img');
+                img.src = linkMag;
+                img.alt = 'Mostra Magistrado ' + vaga;
+                img.onerror = function() {
+                    container.innerHTML = '<p style="color: #d9534f; padding: 20px;">Erro ao carregar a imagem do magistrado. Verifique o link fornecido na planilha.</p>';
+                };
+                container.appendChild(img);
+            } else {
+                container.innerHTML = `
+                    <div style="padding: 20px; text-align: center;">
+                        <p style="font-size: 1.1em; font-weight: bold; color: #3B5998;">Vaga ${vaga}</p>
+                        <p style="color: #777; font-size: 0.9em;">Nenhum link de imagem do magistrado foi adicionado na coluna correspondente desta linha no Excel/Planilha.</p>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('mapModal').style.display = 'flex';
+        }
+
+        function _acionarUploadComSenha() {
+            const senhaDigitada = prompt('Digite a senha para enviar e salvar a imagem na planilha:');
+            if (senhaDigitada === null) return; 
+
+            if (senhaDigitada !== SENHA_MESTRE) {
+                alert('Senha incorreta! Envio não autorizado.');
+                return;
+            }
+
+            document.getElementById('fileInputMapa').click();
+        }
+
+        function verificarSenhaEEnviarImagem(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            const statusEl = document.getElementById('uploadStatus');
+            const btnUpload = document.getElementById('btnUpload');
+            
+            statusEl.innerText = 'A processar e a enviar imagem para a planilha...';
+            btnUpload.disabled = true;
+
+            reader.onload = async function(e) {
+                const base64Image = e.target.result; 
+                const item = dadosGlobais[currentItemIndex];
+
+                const payload = {
+                    rowNumber: item.rowNumber,
+                    Vaga: document.getElementById(`vaga_${currentItemIndex}`).value,
+                    Veículo: document.getElementById(`veiculo_${currentItemIndex}`).value,
+                    Placa: document.getElementById(`placa_${currentItemIndex}`).value,
+                    Mapa: base64Image 
+                };
+
+                try {
+                    const response = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const result = await response.json();
+                    statusEl.innerText = 'Imagem guardada com sucesso na planilha!';
+                    btnUpload.disabled = false;
+                    
+                    const container = document.getElementById('mapPreviewContainer');
+                    container.innerHTML = '';
+                    const img = document.createElement('img');
+                    img.src = base64Image;
+                    container.appendChild(img);
+
+                    dadosGlobais[currentItemIndex]['Mapa'] = base64Image;
+
+                } catch (error) {
+                    statusEl.innerText = 'Erro ao enviar imagem: ' + error;
+                    btnUpload.disabled = false;
+                }
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        function fecharMapa() {
+            document.getElementById('mapModal').style.display = 'none';
+            document.getElementById('fileInputMapa').value = ''; 
+            carregarDados(); 
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('mapModal');
+            if (event.target == modal) {
+                fecharMapa();
+            }
+        }
+
+        carregarDados();
+    </script>
+</body>
+</html>
