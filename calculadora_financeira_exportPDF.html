@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Calculadora Financeira</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+        }
+
+        /* Ocultar setas nos inputs numéricos */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        /* Animações de transição de ecrã */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+        .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
+
+        .result-card {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        }
+
+        /* Regras específicas para impressão / Exportação PDF limpa */
+        @media print {
+            body { background-color: #ffffff; color: #000000; overflow: visible !important; }
+            header, nav, button, .no-print { display: none !important; }
+            .tab-content:not(.active) { display: none !important; }
+            .tab-content.active { display: block !important; }
+            .result-card { 
+                background: #ffffff !important; 
+                color: #000000 !important; 
+                border: 2px solid #1e3a8a !important;
+                box-shadow: none !important;
+            }
+            .result-card * { color: #000000 !important; }
+            .print-header { display: block !important; }
+        }
+        .print-header { display: none; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-slate-800">
+
+    <header class="bg-white px-6 pt-safe pb-4 shadow-sm z-10 relative">
+        <div class="mt-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800" id="headerTitle">Juros Simples</h1>
+                <p class="text-sm text-slate-500">Calculadora Financeira</p>
+            </div>
+            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                <i class="fa-solid fa-calculator text-lg"></i>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto px-6 py-6 pb-24">
+        
+        <!-- Cabeçalho visível apenas ao exportar/imprimir PDF -->
+        <div class="print-header mb-6 text-center border-b pb-4">
+            <h2 class="text-xl font-bold text-blue-900">Relatório de Cálculo Financeiro</h2>
+            <p class="text-xs text-slate-500" id="print-date"></p>
+        </div>
+
+        <!-- ================= ABA: JUROS SIMPLES ================= -->
+        <section id="tab-simples" class="tab-content active">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6 no-print">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Capital (R$)</label>
+                        <input type="number" id="simp-capital" placeholder="Ex: 1000.00" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Taxa (%)</label>
+                            <input type="number" id="simp-taxa" placeholder="Ex: 2.5" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Período</label>
+                            <select id="simp-periodo-taxa" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 appearance-none">
+                                <option value="mensal">Ao mês</option>
+                                <option value="anual">Ao ano</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Prazo (Meses)</label>
+                        <input type="number" id="simp-prazo" placeholder="Ex: 12" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    </div>
+                    <button onclick="calcularSimples()" class="w-full bg-blue-600 text-white rounded-xl py-3.5 font-semibold active:scale-[0.98] transition-transform mt-2 shadow-md shadow-blue-200">
+                        Calcular Juros
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card de Resultado -->
+            <div id="simp-result" class="hidden result-card rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
+                    <i class="fa-solid fa-coins text-8xl"></i>
+                </div>
+                <h3 class="text-blue-100 text-sm font-medium mb-1">Valor Total (Montante)</h3>
+                <div class="text-3xl font-bold mb-4" id="simp-res-montante">R$ 0,00</div>
+                <div class="flex justify-between items-center border-t border-blue-400/30 pt-3">
+                    <div>
+                        <p class="text-blue-100 text-xs">Total de Juros</p>
+                        <p class="font-semibold" id="simp-res-juros">R$ 0,00</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-blue-100 text-xs">Capital Inicial</p>
+                        <p class="font-semibold" id="simp-res-capital">R$ 0,00</p>
+                    </div>
+                </div>
+
+                <!-- Botão de Exportar PDF -->
+                <button onclick="exportarPDF()" class="mt-5 w-full bg-white/20 hover:bg-white/30 text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-2 backdrop-blur-sm transition-colors no-print">
+                    <i class="fa-solid fa-file-pdf"></i> Exportar Resultado em PDF
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= ABA: JUROS COMPOSTOS ================= -->
+        <section id="tab-compostos" class="tab-content">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6 no-print">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Capital Inicial (R$)</label>
+                        <input type="number" id="comp-capital" placeholder="Ex: 5000.00" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Taxa (%)</label>
+                            <input type="number" id="comp-taxa" placeholder="Ex: 1.0" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Período</label>
+                            <select id="comp-periodo-taxa" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 appearance-none">
+                                <option value="mensal">Ao mês</option>
+                                <option value="anual">Ao ano</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Prazo (Meses)</label>
+                        <input type="number" id="comp-prazo" placeholder="Ex: 24" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    </div>
+                    <button onclick="calcularCompostos()" class="w-full bg-blue-600 text-white rounded-xl py-3.5 font-semibold active:scale-[0.98] transition-transform mt-2 shadow-md shadow-blue-200">
+                        Calcular Rendimento
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card de Resultado -->
+            <div id="comp-result" class="hidden result-card rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
+                    <i class="fa-solid fa-chart-line text-8xl"></i>
+                </div>
+                <h3 class="text-blue-100 text-sm font-medium mb-1">Valor Total (Montante)</h3>
+                <div class="text-3xl font-bold mb-4" id="comp-res-montante">R$ 0,00</div>
+                <div class="flex justify-between items-center border-t border-blue-400/30 pt-3">
+                    <div>
+                        <p class="text-blue-100 text-xs">Juros Acumulados</p>
+                        <p class="font-semibold text-green-300" id="comp-res-juros">+ R$ 0,00</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-blue-100 text-xs">Capital Inicial</p>
+                        <p class="font-semibold" id="comp-res-capital">R$ 0,00</p>
+                    </div>
+                </div>
+
+                <!-- Botão de Exportar PDF -->
+                <button onclick="exportarPDF()" class="mt-5 w-full bg-white/20 hover:bg-white/30 text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-2 backdrop-blur-sm transition-colors no-print">
+                    <i class="fa-solid fa-file-pdf"></i> Exportar Resultado em PDF
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= ABA: CONSIGNADO ================= -->
+        <section id="tab-consignado" class="tab-content">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6 no-print">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Valor do Empréstimo (R$)</label>
+                        <input type="number" id="cons-capital" placeholder="Ex: 10000.00" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Taxa Mensal (%)</label>
+                            <input type="number" id="cons-taxa" placeholder="Ex: 1.8" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Prazo (Meses)</label>
+                            <input type="number" id="cons-prazo" placeholder="Ex: 72" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                        </div>
+                    </div>
+                    <button onclick="calcularConsignado()" class="w-full bg-blue-600 text-white rounded-xl py-3.5 font-semibold active:scale-[0.98] transition-transform mt-2 shadow-md shadow-blue-200">
+                        Calcular Prestação
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card de Resultado -->
+            <div id="cons-result" class="hidden result-card rounded-2xl shadow-lg p-6 text-white relative overflow-hidden" style="background: linear-gradient(135deg, #047857 0%, #10b981 100%);">
+                <div class="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
+                    <i class="fa-solid fa-file-invoice-dollar text-8xl"></i>
+                </div>
+                <h3 class="text-green-100 text-sm font-medium mb-1">Prestação Mensal</h3>
+                <div class="text-3xl font-bold mb-4" id="cons-res-prestacao">R$ 0,00</div>
+                
+                <div class="space-y-2 mt-4">
+                    <div class="flex justify-between items-center text-sm border-t border-green-400/30 pt-2">
+                        <span class="text-green-100">Valor Financiado:</span>
+                        <span class="font-semibold" id="cons-res-capital">R$ 0,00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-green-100">Total a Pagar:</span>
+                        <span class="font-semibold" id="cons-res-total">R$ 0,00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-green-100">Total de Juros:</span>
+                        <span class="font-semibold text-red-200" id="cons-res-juros">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <!-- Botão de Exportar PDF -->
+                <button onclick="exportarPDF()" class="mt-5 w-full bg-white/20 hover:bg-white/30 text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-2 backdrop-blur-sm transition-colors no-print">
+                    <i class="fa-solid fa-file-pdf"></i> Exportar Resultado em PDF
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Menu de Navegação Inferior -->
+    <nav class="fixed bottom-0 w-full bg-white border-t border-slate-200 pb-safe z-20 no-print">
+        <div class="flex justify-around items-center pt-2 pb-1">
+            <button onclick="switchTab('simples')" id="btn-simples" class="nav-btn flex flex-col items-center p-2 text-blue-600 transition-colors">
+                <i class="fa-solid fa-percent text-xl mb-1"></i>
+                <span class="text-[10px] font-semibold">Simples</span>
+            </button>
+            <button onclick="switchTab('compostos')" id="btn-compostos" class="nav-btn flex flex-col items-center p-2 text-slate-400 hover:text-slate-600 transition-colors">
+                <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Compostos</span>
+            </button>
+            <button onclick="switchTab('consignado')" id="btn-consignado" class="nav-btn flex flex-col items-center p-2 text-slate-400 hover:text-slate-600 transition-colors">
+                <i class="fa-solid fa-hand-holding-dollar text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Consignado</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        const formatarMoeda = (valor) => {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+        };
+
+        const showError = (message) => {
+            const headerTitle = document.getElementById('headerTitle');
+            const originalText = headerTitle.innerText;
+            headerTitle.innerText = message;
+            headerTitle.classList.add('text-red-500');
+            setTimeout(() => {
+                headerTitle.innerText = originalText;
+                headerTitle.classList.remove('text-red-500');
+            }, 3000);
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-blue-600');
+                btn.classList.add('text-slate-400');
+                btn.querySelector('span').classList.remove('font-semibold');
+                btn.querySelector('span').classList.add('font-medium');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            activeBtn.classList.remove('text-slate-400');
+            activeBtn.classList.add('text-blue-600');
+            activeBtn.querySelector('span').classList.remove('font-medium');
+            activeBtn.querySelector('span').classList.add('font-semibold');
+
+            const titles = {
+                'simples': 'Juros Simples',
+                'compostos': 'Juros Compostos',
+                'consignado': 'Crédito Consignado'
+            };
+            document.getElementById('headerTitle').innerText = titles[tabId];
+        }
+
+        function exportarPDF() {
+            const dataAtual = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            document.getElementById('print-date').innerText = 'Emitido em: ' + dataAtual;
+            window.print();
+        }
+
+        // ================= CÁLCULO: JUROS SIMPLES =================
+        function calcularSimples() {
+            const capital = parseFloat(document.getElementById('simp-capital').value);
+            const taxaInput = parseFloat(document.getElementById('simp-taxa').value);
+            const periodoTaxa = document.getElementById('simp-periodo-taxa').value;
+            const prazoMeses = parseFloat(document.getElementById('simp-prazo').value);
+
+            if (isNaN(capital) || isNaN(taxaInput) || isNaN(prazoMeses)) {
+                showError('Preencha todos os campos!');
+                return;
+            }
+
+            let taxaDecimal = taxaInput / 100;
+            if (periodoTaxa === 'anual') {
+                taxaDecimal = taxaDecimal / 12;
+            }
+
+            const juros = capital * taxaDecimal * prazoMeses;
+            const montante = capital + juros;
+
+            document.getElementById('simp-res-montante').innerText = formatarMoeda(montante);
+            document.getElementById('simp-res-juros').innerText = formatarMoeda(juros);
+            document.getElementById('simp-res-capital').innerText = formatarMoeda(capital);
+            
+            document.getElementById('simp-result').classList.remove('hidden');
+        }
+
+        // ================= CÁLCULO: JUROS COMPOSTOS =================
+        function calcularCompostos() {
+            const capital = parseFloat(document.getElementById('comp-capital').value);
+            const taxaInput = parseFloat(document.getElementById('comp-taxa').value);
+            const periodoTaxa = document.getElementById('comp-periodo-taxa').value;
+            const prazoMeses = parseFloat(document.getElementById('comp-prazo').value);
+
+            if (isNaN(capital) || isNaN(taxaInput) || isNaN(prazoMeses)) {
+                showError('Preencha todos os campos!');
+                return;
+            }
+
+            let taxaDecimal = taxaInput / 100;
+            if (periodoTaxa === 'anual') {
+                taxaDecimal = Math.pow(1 + taxaDecimal, 1/12) - 1;
+            }
+
+            const montante = capital * Math.pow((1 + taxaDecimal), prazoMeses);
+            const juros = montante - capital;
+
+            document.getElementById('comp-res-montante').innerText = formatarMoeda(montante);
+            document.getElementById('comp-res-juros').innerText = '+ ' + formatarMoeda(juros);
+            document.getElementById('comp-res-capital').innerText = formatarMoeda(capital);
+            
+            document.getElementById('comp-result').classList.remove('hidden');
+        }
+
+        // ================= CÁLCULO: CONSIGNADO =================
+        function calcularConsignado() {
+            const capital = parseFloat(document.getElementById('cons-capital').value);
+            const taxaInput = parseFloat(document.getElementById('cons-taxa').value);
+            const prazoMeses = parseFloat(document.getElementById('cons-prazo').value);
+
+            if (isNaN(capital) || isNaN(taxaInput) || isNaN(prazoMeses) || prazoMeses <= 0) {
+                showError('Preencha campos válidos!');
+                return;
+            }
+
+            const taxaDecimal = taxaInput / 100;
+            let prestacao = 0;
+            if (taxaDecimal === 0) {
+                prestacao = capital / prazoMeses;
+            } else {
+                const fator = Math.pow(1 + taxaDecimal, prazoMeses);
+                prestacao = capital * (taxaDecimal * fator) / (fator - 1);
+            }
+
+            const totalPago = prestacao * prazoMeses;
+            const jurosTotais = totalPago - capital;
+
+            document.getElementById('cons-res-prestacao').innerText = formatarMoeda(prestacao);
+            document.getElementById('cons-res-capital').innerText = formatarMoeda(capital);
+            document.getElementById('cons-res-total').innerText = formatarMoeda(totalPago);
+            document.getElementById('cons-res-juros').innerText = formatarMoeda(jurosTotais);
+            
+            document.getElementById('cons-result').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
