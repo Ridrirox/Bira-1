@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Garagem - TJPR</title>
+    <!-- Ligação para o ficheiro CSS externo -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h2>Controle de Vagas da Garagem - TJPR</h2>
+
+    <!-- Novo campo e botão de pesquisa -->
+    <div class="search-container">
+        <input type="text" id="campoPesquisa" class="search-input" placeholder="Pesquisar por Desembargador, Vaga, Veículo ou Placa..." onkeyup="filtrarTabela()">
+        <button class="btn-pesquisar" onclick="filtrarTabela()">Pesquisar</button>
+    </div>
+
+    <div id="loading">A carregar dados da grelha...</div>
+    
+    <div class="table-container">
+        <table id="garageTable" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Gabinete / Desembargador</th>
+                    <th>Vaga</th>
+                    <th>Veículo</th>
+                    <th>Placa</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Modal para exibir e carregar o Mapa / Imagem da Vaga -->
+    <div id="mapModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="fecharMapa()">&times;</span>
+            <h3 id="modalTitle">Localização da Vaga</h3>
+            <p id="modalSubTitle" style="color: #666; font-size: 0.9em;"></p>
+            
+            <div class="map-preview" id="mapPreviewContainer">
+                <!-- A imagem será inserida dinamicamente aqui -->
+            </div>
+
+            <!-- Botão para Upload e Gravação na Planilha -->
+            <div class="upload-container">
+                <input type="file" id="fileInputMapa" accept="image/*" onchange="verificarSenhaEEnviarImagem(event)">
+                <button class="btn-upload-file" id="btnUpload" onclick="_acionarUploadComSenha()">
+                    📁 Somente Visualizar alguma Imagem
+                </button>
+                <span id="uploadStatus" style="font-size: 0.85em; color: #555; font-weight: bold;"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ligação para o ficheiro JavaScript externo -->
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 0; 
+    padding: 15px; 
+    background-color: #f4f6f9; 
+}
+h2 { 
+    color: #2F4F4F; 
+    text-align: center;
+}
+
+/* Estilos para a Barra de Pesquisa */
+.search-container { 
+    margin-bottom: 20px; 
+    text-align: center;
+}
+.search-input { 
+    width: 70%; 
+    max-width: 500px;
+    padding: 10px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    display: inline-block; 
+    margin-right: 10px;
+    box-sizing: border-box;
+}
+.btn-pesquisar {
+    background-color: #2F4F4F; 
+    color: white; 
+    border: none; 
+    padding: 10px 15px; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    font-weight: bold;
+}
+.btn-pesquisar:hover { background-color: #1F385C; }
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    background: white; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+}
+th, td { 
+    padding: 12px; 
+    border: 1px solid #ddd; 
+    text-align: left; 
+}
+th { 
+    background-color: #3B5998; 
+    color: white; 
+}
+input.table-input { 
+    width: 100%; 
+    box-sizing: border-box; 
+    padding: 8px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+}
+.btn-acao { 
+    background-color: #2F4F4F; 
+    color: white; 
+    border: none; 
+    padding: 8px 12px; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    font-weight: bold;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+.btn-mapa {
+    background-color: #3B5998;
+    color: white;
+    border: none;
+    padding: 8px 12px; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    font-weight: bold;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+.btn-acao:hover { background-color: #1F385C; }
+.btn-mapa:hover { background-color: #2a437e; }
+
+#loading {
+    text-align: center;
+    font-size: 1.2em;
+    margin-top: 20px;
+    color: #555;
+}
+
+/* Estilos do Modal do Mapa */
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 1000; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.5); 
+    align-items: center;
+    justify-content: center;
+}
+.modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 650px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    position: relative;
+    text-align: center;
+}
+.close-btn {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.close-btn:hover { color: #000; }
+
+.map-preview {
+    width: 100%;
+    min-height: 250px;
+    max-height: 380px;
+    background-color: #e9ecef;
+    border: 2px dashed #ccc;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 15px;
+    position: relative;
+    overflow: hidden;
+}
+.map-preview img {
+    max-width: 100%;
+    max-height: 360px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+/* Estilo para a área de upload de imagem no modal */
+.upload-container {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+.btn-upload-file {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    display: inline-block;
+    width: 100%;
+    max-width: 300px;
+}
+.btn-upload-file:hover {
+    background-color: #218838;
+}
+#fileInputMapa {
+    display: none;
+}
+
+/* Responsividade para Telemóveis */
+@media screen and (max-width: 768px) {
+    .search-input { width: 100%; margin-bottom: 10px; margin-right: 0; }
+    .btn-pesquisar { width: 100%; }
+
+    table, thead, tbody, th, td, tr {
+        display: block;
+    }
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    tr {
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        background-color: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 45%;
+        text-align: right;
+    }
+    td:before {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        width: 40%;
+        padding-right: 10px;
+        white-space: nowrap;
+        font-weight: bold;
+        text-align: left;
+        color: #3B5998;
+    }
+    td:nth-of-type(1):before { content: "Gabinete:"; }
+    td:nth-of-type(2):before { content: "Vaga:"; }
+    td:nth-of-type(3):before { content: "Veículo:"; }
+    td:nth-of-type(4):before { content: "Placa:"; }
+    td:nth-of-type(5):before { content: "Ações:"; }
+
+    td:nth-of-type(1) {
+        background-color: #f0f2f5;
+        text-align: center;
+        padding-left: 12px;
+        font-size: 1.1em;
+        border-radius: 8px 8px 0 0;
+    }
+    td:nth-of-type(1):before { content: ""; display: none; }
+    
+    input.table-input { margin-top: 5px; text-align: right; }
+    .btn-acao, .btn-mapa { width: 100%; margin-bottom: 8px; }
+    .btn-upload-file { max-width: 100%; }
+}
